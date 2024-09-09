@@ -19,4 +19,12 @@ group :jekyll_plugins do
     gem 'jekyll-archives'
     gem 'kramdown'
     gem 'rouge'
+    gem 'ffi', '>= 1.15'
+    # Add these gems to your Gemfile 09/09/24
+    gem 'logger'      # Logger gem for logging
+    gem 'ostruct'     # OpenStruct
+    gem 'base64'      # Base64 encoding/decoding
+    gem 'bigdecimal'  # BigDecimal gem for handling decimals
+    gem 'rexml'       # XML parsing library
+    gem 'liquid', '~> 4.0'
 end
