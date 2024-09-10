@@ -8,8 +8,6 @@ comments: true
 <div class="row justify-content-between">
 <div class="col-md-8 pr-5">
 
-
-
 <blockquote>
 May I, composed like them<br>
 Of Eros and of dust,<br>
