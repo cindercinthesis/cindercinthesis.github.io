@@ -1,0 +1,30 @@
+---
+import SocialIcons from "./SocialIcons.astro";
+
+const menuItems = [
+  { name: "Photography", href: "/" },
+  { name: "Writing", href: "/writing/" },
+  { name: "Music", href: "/music/" },
+  { name: "Drawing", href: "/drawing/" },
+];
+
+console.log(Astro.url.pathname);
+---
+
+<header class="header">
+  <div class="header-left">
+    <h1>Cindercinthesis</h1>
+    <!-- <h1 style={{ marginTop: "-6px" }}>NEW YORK CITY & BEYOND</h1>
+    <p><a href="mailto:josh@rehders.photos">JOSH@REHDERS.PHOTOS</a></p> -->
+  </div>
+  <nav class="header-nav">
+    {
+      menuItems.map((item) => (
+        <a href={item.href} class={`header-link${item.href === Astro.url.pathname ? "-active" : ""}`}>
+          {item.name}
+        </a>
+      ))
+    }
+    <SocialIcons />
+  </nav>
+</header>
