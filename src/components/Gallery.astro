@@ -30,7 +30,7 @@ cloudinary.config({
 });
 
 const search = await cloudinary.search
-  // .expression(`folder:${Astro.props.folder}`)
+  .expression(`folder:${Astro.props.folder}`)
   .with_field("context")
   .sort_by("display_name", "asc")
   .max_results(500)
