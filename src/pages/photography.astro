@@ -1,0 +1,12 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Header from "../components/Header.astro";
+import Gallery from "../components/Gallery.astro";
+---
+
+<Layout title="I often wonder what it means to exist — Photography" description="Photography portfolio.">
+  <main>
+    <Header />
+    <Gallery class:list={"gallery"} folder="photography-front" filter="image" />
+  </main>
+</Layout>
