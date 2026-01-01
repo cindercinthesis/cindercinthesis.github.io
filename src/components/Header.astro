@@ -1,13 +1,19 @@
 ---
 import SocialIcons from "./SocialIcons.astro";
 
+export interface Props {
+  showSocials?: boolean;
+}
+
 const menuItems = [
   { name: "Home", href: "/" },
   { name: "Photography", href: "/photography/" },
   { name: "Writing", href: "/writing/" },
   { name: "Music", href: "/music/" },
-  { name: "About", href: "/about/" },
+  // { name: "About", href: "/about/" }, // disabled for now; uncomment to restore
 ];
+
+const showSocials = Astro.props.showSocials ?? true;
 ---
 
 <header class="header">
@@ -24,6 +30,9 @@ const menuItems = [
         </a>
       ))
     }
-    <SocialIcons />
+    {/*
+      {showSocials && <SocialIcons />}
+      Social icons are hidden for now; uncomment to restore.
+    */}
   </nav>
 </header>

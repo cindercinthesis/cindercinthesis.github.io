@@ -1,12 +1,95 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import Header from "../components/Header.astro";
-import Gallery from "../components/Gallery.astro";
 ---
 
-<Layout title="Cindercinthesis — Concert and Sports Photographer & Videographer" description="Cindercinthesis is a concert and sports photographer & videographer based in New York City.">
-  <main>
+<Layout title="I often wonder what it means to exist — Music" description="Motion and sound.">
+  <main class="page-shell">
     <Header />
-    <Gallery folder="concerts" filter="video" />
+
+    <section class="hero">
+      <p class="eyebrow">Music</p>
+      <h2>Scenes that move.</h2>
+      <p class="lede">Moments in motion—watch and listen.</p>
+    </section>
+
+    <!-- Content intentionally omitted for now -->
   </main>
 </Layout>
+
+<style>
+  :global(body) {
+    background: radial-gradient(circle at 20% 20%, #0f0f14 0%, #0b0b10 35%, #07070c 65%, #050508 100%);
+    color: #ffffff;
+    font-family: "Cormorant Garamond", "Iowan Old Style", Georgia, serif;
+    letter-spacing: 0.01em;
+  }
+
+  .page-shell {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem 4.5rem;
+  }
+
+  .hero {
+    margin-top: 2rem;
+    display: grid;
+    gap: 1.1rem;
+  }
+
+  .eyebrow {
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    color: #e6d6b9;
+    margin: 0;
+  }
+
+  .hero h2 {
+    font-size: clamp(2.3rem, 5vw, 3.2rem);
+    line-height: 1.08;
+    margin: 0;
+    color: #ffffff;
+  }
+
+  .lede {
+    font-family: "Neue Haas Grotesk", "Helvetica Neue", Arial, sans-serif;
+    font-size: 1.05rem;
+    line-height: 1.8;
+    max-width: 680px;
+    color: #f0e7d8;
+    margin: 0;
+  }
+
+  :global(.header) {
+    background: #f2e7d7;
+    padding: 1rem 1.25rem;
+  }
+
+  :global(.header h1) {
+    color: #1c1a17;
+  }
+
+  :global(.header-link),
+  :global(.header-link-active) {
+    color: #1c1a17;
+  }
+
+  :global(.header-link-active) {
+    color: #7b6a55;
+  }
+
+  :global(.header-link:hover) {
+    color: #7b6a55;
+  }
+
+  @media (max-width: 640px) {
+    .page-shell {
+      padding: 2.3rem 1.1rem 3.5rem;
+    }
+
+    .hero {
+      margin-top: 1.3rem;
+    }
+  }
+</style>
