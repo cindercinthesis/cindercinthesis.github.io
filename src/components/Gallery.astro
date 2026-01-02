@@ -38,79 +38,89 @@ const search = await cloudinary.search
 
 const resources = search.resources as CloudinaryResource[];
 const filteredResources = Astro.props.filter ? resources.filter((resource) => resource.resource_type == Astro.props.filter) : resources;
+const tilePattern = ["full", "wide", "", "wide bottom", "", "", "full", ""];
 
-const gallerySpacing = "m-1";
 ---
 
-<div class={`flex flex-wrap ${gallerySpacing}`}>
+<div class="gallery-grid">
   {
-    filteredResources.map((CloudinaryResource, index) => (
-      <div
-        data-position={`${index == 0 ? "first" : index + 1 == filteredResources.length ? "last" : "middle"}`}
-        onclick="setFullscreen(this)"
-        ontouchend="if (!isScrolling) setFullscreen(this)"
-        class={`relative cursor-zoom-in fullscreen:cursor-auto ${gallerySpacing}`}
-        style={`flex-grow: ${(CloudinaryResource.width * 400) / CloudinaryResource.height}; flex-basis: ${(CloudinaryResource.width * 400) / CloudinaryResource.height}px;`}
-      >
-        <div class="block" style={`padding-bottom: ${(CloudinaryResource.height / CloudinaryResource.width) * 100}%`} />
+    filteredResources.map((CloudinaryResource, index) => {
+      const baseClass = tilePattern[index % tilePattern.length];
+      let staggerClass = "";
 
-        <div role="status" class="absolute top-1/2 left-1/2 z-[2] hidden -translate-x-1/2 -translate-y-1/2 fullscreen:fixed fullscreen:block">
-          <span class="sr-only">loading image...</span>
-        </div>
+      // Stagger small tiles to create a staircase effect (no overlap)
+      if (!baseClass) {
+        const pair = Math.floor(index / 2);
+        const positionInPair = index % 2; // 0 or 1
+        const invert = pair % 2 === 1;
+        const shouldBottom = invert ? positionInPair === 0 : positionInPair === 1;
+        staggerClass = shouldBottom ? "bottom" : "";
+      }
 
-        {CloudinaryResource.resource_type == "image" ? (
-          <Picture
-            src={CloudinaryResource.secure_url}
-            width={CloudinaryResource.width}
-            height={CloudinaryResource.height}
-            widths={[800, 1200, 2000]}
-            sizes="(min-width: 1150px) 50vw, (min-width: 900px) 75vw, 100vw"
-            alt={CloudinaryResource.context?.alt || ""}
-            class="absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-1000"
-            loading={index <= 10 ? "eager" : "lazy"}
-            onload="this.style.opacity=1; this.parentNode.querySelector('[role=status]').style.display = 'none';"
-            draggable="false"
-          />
-        ) : (
-          <div>
+      const spanClass = `${baseClass} ${staggerClass}`.trim();
+      const altText = CloudinaryResource.context?.alt || "";
+      return (
+        <div
+          data-position={`${index == 0 ? "first" : index + 1 == filteredResources.length ? "last" : "middle"}`}
+          onclick="setFullscreen(this)"
+          ontouchend="if (!isScrolling) setFullscreen(this)"
+          class={`gallery-item relative cursor-zoom-in fullscreen:cursor-auto ${spanClass}`}
+          style={`aspect-ratio: ${CloudinaryResource.width} / ${CloudinaryResource.height};`}
+          data-alt={altText}
+        >
+          <div role="status" class="absolute top-1/2 left-1/2 z-[2] hidden -translate-x-1/2 -translate-y-1/2 fullscreen:fixed fullscreen:block">
+            <span class="sr-only">loading image...</span>
+          </div>
+
+          {CloudinaryResource.resource_type == "image" ? (
+            <Picture
+              src={CloudinaryResource.secure_url}
+              width={CloudinaryResource.width}
+              height={CloudinaryResource.height}
+              widths={[800, 1200, 2000]}
+              sizes="(min-width: 1150px) 50vw, (min-width: 900px) 75vw, 100vw"
+              alt={CloudinaryResource.context?.alt || ""}
+              class="resource absolute inset-0 h-full w-full object-contain opacity-0 transition-opacity duration-1000"
+              loading={index <= 10 ? "eager" : "lazy"}
+              onload="this.style.opacity=1; this.parentNode.querySelector('[role=status]').style.display = 'none';"
+              draggable="false"
+            />
+          ) : (
             <div>
-              <video
-                id={`video-${index}`}
-                loop
-                webkit-playsinline
-                playsinline
-                muted
-                preload="none"
-                onclick="this.paused ? this.play() : this.pause()"
-                onmouseover="previewVideo(this)"
-                onmouseout="resetVideo(this)"
-                oncanplay="this.parentNode.previousElementSibling.style.display = 'none';"
-                class="resource pointer-events-none absolute top-0 h-full w-full object-cover align-bottom fullscreen:pointer-events-auto"
-              >
-                <source src={CloudinaryResource.secure_url} type="video/mp4" />
-                Your browser does not support HTML video.
-              </video>
-            </div>
+              <div>
+                <video
+                  id={`video-${index}`}
+                  loop
+                  webkit-playsinline
+                  playsinline
+                  muted
+                  preload="none"
+                  onclick="this.paused ? this.play() : this.pause()"
+                  onmouseover="previewVideo(this)"
+                  onmouseout="resetVideo(this)"
+                  oncanplay="this.parentNode.previousElementSibling.style.display = 'none';"
+                  class="resource pointer-events-none absolute top-0 h-full w-full object-contain align-bottom fullscreen:pointer-events-auto"
+                >
+                  <source src={CloudinaryResource.secure_url} type="video/mp4" />
+                  Your browser does not support HTML video.
+                </video>
+              </div>
 
-            <div class="video-duration pointer-events-none absolute bottom-0 flex w-full items-center justify-start bg-gradient-to-t from-black/50 to-transparent font-mono fullscreen:fixed fullscreen:left-0 fullscreen:z-[2] fullscreen:pl-6 fullscreen:pb-6">
-              <Icon name="play" />
-              <div class="text-xs">
-                <span id={`current-time-video-${index}`} class="current-time hidden fullscreen:inline-flex">
-                  0:00 /{" "}
-                </span>
-                <span>{new Date(CloudinaryResource.duration * 1000).toISOString().slice(15, 19)}</span>
+              <div class="video-duration pointer-events-none absolute bottom-0 flex w-full items-center justify-start bg-gradient-to-t from-black/50 to-transparent font-mono fullscreen:fixed fullscreen:left-0 fullscreen:z-[2] fullscreen:pl-6 fullscreen:pb-6">
+                <Icon name="play" />
+                <div class="text-xs">
+                  <span id={`current-time-video-${index}`} class="current-time hidden fullscreen:inline-flex">
+                    0:00 /{" "}
+                  </span>
+                  <span>{new Date(CloudinaryResource.duration * 1000).toISOString().slice(15, 19)}</span>
+                </div>
               </div>
             </div>
-          </div>
-        )}
-      </div>
-    ))
+          )}
+        </div>
+      );
+    })
   }
-
-  <!-- placeholders required to properly size images in the last/incomplete row -->
-  <!-- {Array.from({length: 10}, () => (
-    <div class="m-0 h-0 grow-[100] basis-[240px]"></div>
-  ))} -->
 </div>
 
 <div id="fullscreen-backdrop" class="scale-200 pointer-events-none fixed inset-0 z-[1] h-screen w-screen bg-black opacity-0 transition-opacity duration-200">
@@ -137,9 +147,9 @@ const gallerySpacing = "m-1";
     <span class="sr-only">exit image</span>
   </button>
 
-  <div id="fullscreen-metadata" class="fixed right-0 top-0 h-screen w-80 bg-black/50 p-6 text-white">
-    <h2 class="mb-2 text-xl font-bold">Test Title</h2>
-    <p class="text-sm text-gray-200">This is a test description to make sure the metadata display is working.</p>
+  <div id="fullscreen-metadata" class="fixed right-0 top-0 h-screen w-96 bg-black/70 p-6 text-white">
+    <h2 class="mb-2 text-xl font-bold" data-meta-title>Untitled</h2>
+    <p class="text-sm text-gray-200 leading-relaxed" data-meta-body>Tap a photo to see details.</p>
   </div>
 </div>
 
@@ -159,6 +169,7 @@ const gallerySpacing = "m-1";
 
     if (resource.readyState <= 1) resource.load();
 
+    updateMetadata(fullscreen, resource);
     document.getElementById("fullscreen-metadata").style.opacity = "1";
     document.getElementById("fullscreen-metadata").style.pointerEvents = "auto";
 
@@ -289,6 +300,18 @@ const gallerySpacing = "m-1";
     resetResources();
   }
 
+  function updateMetadata(wrapper, resource) {
+    const meta = document.getElementById("fullscreen-metadata");
+    const titleEl = meta.querySelector("[data-meta-title]");
+    const bodyEl = meta.querySelector("[data-meta-body]");
+
+    const alt = wrapper.dataset.alt || "";
+    const src = resource?.currentSrc || resource?.src || "";
+
+    titleEl.textContent = alt || "Untitled";
+    bodyEl.textContent = alt ? alt : src;
+  }
+
   function resetResources() {
     const resources = document.querySelectorAll(".gallery .resource");
     resources.forEach((resource) => {
@@ -393,3 +416,41 @@ const gallerySpacing = "m-1";
     false
   );
 </script>
+
+<style>
+  .gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+    grid-auto-flow: dense;
+  }
+
+  .gallery-item {
+    position: relative;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.02);
+  }
+
+  .gallery-item .resource {
+    inset: 0;
+  }
+
+  .wide {
+    grid-column: span 2;
+  }
+
+  .bottom {
+    align-self: end;
+  }
+
+  .full {
+    grid-column: 1 / -1;
+  }
+
+  @media (max-width: 640px) {
+    .gallery-grid {
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 8px;
+    }
+  }
+</style>
