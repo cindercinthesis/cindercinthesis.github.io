@@ -12,6 +12,25 @@ export interface Props {
   filter?: string;
 }
 
+export interface CloudinaryCustomContext {
+  title?: string;
+  name?: string;
+  time?: string;
+  date?: string;
+  location?: string;
+  place?: string;
+  description?: string;
+  body?: string;
+  caption?: string;
+  [key: string]: string | undefined;
+}
+
+export interface CloudinaryContext {
+  alt?: string;
+  caption?: string;
+  custom?: CloudinaryCustomContext;
+}
+
 export interface CloudinaryResource {
   secure_url: string;
   resource_type: string;
@@ -19,7 +38,7 @@ export interface CloudinaryResource {
   height: number;
   duration: number;
   aspect_ratio: number;
-  context: { alt: string };
+  context?: CloudinaryContext;
 }
 
 cloudinary.config({
@@ -59,6 +78,11 @@ const tilePattern = ["full", "wide", "", "wide bottom", "", "", "full", ""];
 
       const spanClass = `${baseClass} ${staggerClass}`.trim();
       const altText = CloudinaryResource.context?.alt || "";
+      const customContext: CloudinaryCustomContext = CloudinaryResource.context?.custom ?? {};
+      const metaTitle = customContext.title || customContext.name || CloudinaryResource.context?.caption || "";
+      const metaTime = customContext.time || customContext.date || "";
+      const metaLocation = customContext.location || customContext.place || "";
+      const metaBody = customContext.description || customContext.body || CloudinaryResource.context?.alt || "";
       return (
         <div
           data-position={`${index == 0 ? "first" : index + 1 == filteredResources.length ? "last" : "middle"}`}
@@ -67,6 +91,10 @@ const tilePattern = ["full", "wide", "", "wide bottom", "", "", "full", ""];
           class={`gallery-item relative cursor-zoom-in fullscreen:cursor-auto ${spanClass}`}
           style={`aspect-ratio: ${CloudinaryResource.width} / ${CloudinaryResource.height};`}
           data-alt={altText}
+          data-meta-title={metaTitle}
+          data-meta-time={metaTime}
+          data-meta-location={metaLocation}
+          data-meta-body={metaBody}
         >
           <div role="status" class="absolute top-1/2 left-1/2 z-[2] hidden -translate-x-1/2 -translate-y-1/2 fullscreen:fixed fullscreen:block">
             <span class="sr-only">loading image...</span>
@@ -78,7 +106,7 @@ const tilePattern = ["full", "wide", "", "wide bottom", "", "", "full", ""];
               width={CloudinaryResource.width}
               height={CloudinaryResource.height}
               widths={[800, 1200, 2000]}
-              sizes="(min-width: 1150px) 50vw, (min-width: 900px) 75vw, 100vw"
+              sizes="(min-width: 900px) 70vw, 100vw"
               alt={CloudinaryResource.context?.alt || ""}
               class="resource absolute inset-0 h-full w-full object-contain opacity-0 transition-opacity duration-1000"
               loading={index <= 10 ? "eager" : "lazy"}
@@ -127,29 +155,40 @@ const tilePattern = ["full", "wide", "", "wide bottom", "", "", "full", ""];
   <!-- but image -->
 </div>
 
-<div id="fullscreen-controls" class="pointer-events-none fixed top-0 z-[3] h-screen w-screen opacity-0 transition-opacity duration-200">
-  <button type="button" onclick="prevResource()" class="fixed left-0 mt-[25vh] flex h-[50vh] w-[15vw] items-center opacity-0 hover:opacity-100 md:w-[25vw]">
-    <div class="absolute left-0 ml-4 rounded-full bg-neutral-700 p-2 md:ml-8 md:p-4">
-      <Icon name="left" />
-      <span class="sr-only">previous image</span>
+<div id="fullscreen-controls" class="fixed top-0 z-[3] h-screen w-screen transition-opacity duration-200">
+  <button
+    type="button"
+    onclick="prevResource()"
+    class="fullscreen-prev fixed left-0 mt-[25vh] flex h-[50vh] w-[15vw] items-center justify-start opacity-0 hover:opacity-100 md:w-[25vw]"
+  >
+    <span class="fullscreen-control fullscreen-control-arrow ml-4 md:ml-8" aria-hidden="true">
+      <span class="fullscreen-control-glyph">&#8592;</span>
+    </span>
+    <span class="sr-only">previous image</span>
+  </button>
+
+  <button
+    type="button"
+    onclick="nextResource()"
+    class="fullscreen-next fixed right-0 mt-[25vh] flex h-[50vh] w-[15vw] items-center justify-end opacity-0 hover:opacity-100 md:w-[25vw]"
+  >
+    <span class="fullscreen-control fullscreen-control-arrow mr-4 md:mr-8" aria-hidden="true">
+      <span class="fullscreen-control-glyph">&#8594;</span>
+    </span>
+    <span class="sr-only">next image</span>
+  </button>
+
+  <button type="button" onclick="escapeFullscreen(true)" class="fullscreen-close fullscreen-control" aria-label="cancel preview">
+    <span class="fullscreen-control-glyph" aria-hidden="true">&#10007;</span>
+    <span class="sr-only">cancel preview</span>
+  </button>
+
+  <div id="fullscreen-metadata" class="fullscreen-metadata">
+    <div class="meta-inner">
+      <h2 class="meta-title" data-meta-title></h2>
+      <p class="meta-line" data-meta-line></p>
+      <p class="meta-body" data-meta-body></p>
     </div>
-  </button>
-
-  <button type="button" onclick="nextResource()" class="fixed right-0 mt-[25vh] flex h-[50vh] w-[15vw] items-center opacity-0 hover:opacity-100 md:w-[25vw]">
-    <div class="absolute right-0 mr-4 rounded-full bg-neutral-700 p-2 md:mr-8 md:p-4">
-      <Icon name="right" />
-      <span class="sr-only">next image</span>
-    </div>
-  </button>
-
-  <button type="button" onclick="escapeFullscreen(true)" class="fixed ml-2 mt-2 rounded-full bg-neutral-700/50 p-3 hover:bg-neutral-700">
-    <Icon name="x" />
-    <span class="sr-only">exit image</span>
-  </button>
-
-  <div id="fullscreen-metadata" class="fixed right-0 top-0 h-screen w-96 bg-black/70 p-6 text-white">
-    <h2 class="mb-2 text-xl font-bold" data-meta-title>Untitled</h2>
-    <p class="text-sm text-gray-200 leading-relaxed" data-meta-body>Tap a photo to see details.</p>
   </div>
 </div>
 
@@ -161,6 +200,12 @@ const tilePattern = ["full", "wide", "", "wide bottom", "", "", "full", ""];
       return;
     }
 
+    const currentFullscreen = document.getElementById("fullscreen");
+    if (currentFullscreen) {
+      currentFullscreen.removeAttribute("id");
+      currentFullscreen.classList.remove("fullscreen");
+    }
+
     disableScrolling();
     enableFullscreenControls();
     element.id = "fullscreen";
@@ -169,9 +214,7 @@ const tilePattern = ["full", "wide", "", "wide bottom", "", "", "full", ""];
 
     if (resource.readyState <= 1) resource.load();
 
-    updateMetadata(fullscreen, resource);
-    document.getElementById("fullscreen-metadata").style.opacity = "1";
-    document.getElementById("fullscreen-metadata").style.pointerEvents = "auto";
+    updateMetadata(element);
 
     if (animation) {
       isAnimating = true;
@@ -219,70 +262,49 @@ const tilePattern = ["full", "wide", "", "wide bottom", "", "", "full", ""];
     setTimeout(() => {
       resource.classList.remove("zoom-out");
       const fullscreen = document.getElementById("fullscreen");
-      if (fullscreen) fullscreen.removeAttribute("id");
+      if (fullscreen) {
+        fullscreen.removeAttribute("id");
+        fullscreen.classList.remove("fullscreen");
+      }
     }, 200);
   }
 
   function fullscreenResource(resource) {
     const fullscreen = document.getElementById("fullscreen");
-    const resourceHeight = resource.naturalHeight;
-    const resourceWidth = resource.naturalWidth;
+    const isStacked = window.matchMedia("(max-width: 900px)").matches;
+    const shiftOffset = Math.round(window.innerWidth * (isStacked ? 0.5 : 0.35));
 
-    fullscreen.classList.add("fullscreen");
     document.querySelector("#fullscreen-backdrop").classList.add("active");
     document.querySelector("#fullscreen-controls").classList.add("active");
-
-    const changeBackdrop = () => {
-      document.querySelector("#fullscreen-backdrop").classList.remove("active");
-    };
-    setTimeout(changeBackdrop, 200);
 
     // pre-position the next/previous resources by setting fullscreen transform properties
     resetResources();
 
     if (fullscreen.dataset.position == "first") {
       document.querySelectorAll(`[data-position="middle"]`).forEach((resource) => {
-        resource.style.transform = `translateX(calc(100vw - ${resourceWidth / 2}px))`;
+        resource.style.transform = `translateX(calc(100vw - ${shiftOffset}px))`;
       });
       const last = document.querySelector(`[data-position="last"]`);
-      last.style.transform = `translateX(calc(100vw - ${resourceWidth / 2}px))`;
+      last.style.transform = `translateX(calc(100vw - ${shiftOffset}px))`;
     } else if (fullscreen.dataset.position == "last") {
       document.querySelectorAll(`[data-position="middle"]`).forEach((resource) => {
-        resource.style.transform = `translateX(calc(-100vw + ${resourceWidth / 2}px))`;
+        resource.style.transform = `translateX(calc(-100vw + ${shiftOffset}px))`;
       });
       const first = document.querySelector(`[data-position="first"]`);
-      first.style.transform = `translateX(calc(-100vw + ${resourceWidth / 2}px))`;
+      first.style.transform = `translateX(calc(-100vw + ${shiftOffset}px))`;
     } else {
       const prev = fullscreen.previousElementSibling;
-      prev.style.transform = `translateX(calc(-100vw + ${resourceWidth / 2}px))`;
+      prev.style.transform = `translateX(calc(-100vw + ${shiftOffset}px))`;
 
       const next = fullscreen.nextElementSibling;
-      next.style.transform = `translateX(calc(100vw - ${resourceWidth / 2}px))`;
+      next.style.transform = `translateX(calc(100vw - ${shiftOffset}px))`;
 
       const first = document.querySelector(`[data-position="first"]`);
-      first.style.transform = `translateX(calc(${100 * (1 - Array.from(fullscreen.parentNode.children).indexOf(fullscreen))}vw - ${
-        resourceWidth / 2
-      }px))`;
+      first.style.transform = `translateX(calc(${100 * (1 - Array.from(fullscreen.parentNode.children).indexOf(fullscreen))}vw - ${shiftOffset}px))`;
 
       const last = document.querySelector(`[data-position="last"]`);
-      last.style.transform = `translateX(calc(-${100 * (Array.from(fullscreen.parentNode.children).length - 1 - Array.from(fullscreen.parentNode.children).indexOf(fullscreen))}vw - ${
-        resourceWidth / 2
-      }px))`;
+      last.style.transform = `translateX(calc(-${100 * (Array.from(fullscreen.parentNode.children).length - 1 - Array.from(fullscreen.parentNode.children).indexOf(fullscreen))}vw - ${shiftOffset}px))`;
     }
-
-    // Center the clicked image or video in fullscreen
-    resource.style.height = `${resourceHeight}px`;
-    resource.style.width = `${resourceWidth}px`;
-    resource.style.maxHeight = "60vh";
-    resource.style.maxWidth = "90vw";
-
-    // fix the fullscreen element when zoomed in fullscreen
-    fullscreen.style.position = "fixed";
-    fullscreen.style.top = "50%";
-    fullscreen.style.left = "50%";
-    fullscreen.style.transform = "translate(-50%, -50%)";
-    fullscreen.style.width = `${resourceWidth}px`;
-    fullscreen.style.height = `${resourceHeight}px`;
   }
 
   function enableFullscreenControls() {
@@ -298,48 +320,72 @@ const tilePattern = ["full", "wide", "", "wide bottom", "", "", "full", ""];
     document.querySelector("#fullscreen-controls").classList.remove("active");
 
     resetResources();
+    enableScrolling();
   }
 
-  function updateMetadata(wrapper, resource) {
+  function updateMetadata(wrapper) {
     const meta = document.getElementById("fullscreen-metadata");
     const titleEl = meta.querySelector("[data-meta-title]");
+    const lineEl = meta.querySelector("[data-meta-line]");
     const bodyEl = meta.querySelector("[data-meta-body]");
 
-    const alt = wrapper.dataset.alt || "";
-    const src = resource?.currentSrc || resource?.src || "";
+    const title = (wrapper.dataset.metaTitle || "").trim();
+    const time = (wrapper.dataset.metaTime || "").trim();
+    const location = (wrapper.dataset.metaLocation || "").trim();
+    const body = (wrapper.dataset.metaBody || "").trim();
+    const lineText = [time, location].filter(Boolean).join(" | ");
 
-    titleEl.textContent = alt || "Untitled";
-    bodyEl.textContent = alt ? alt : src;
+    setMetaText(titleEl, title);
+    setMetaText(lineEl, lineText);
+    setMetaText(bodyEl, body);
+  }
+
+  function setMetaText(element, value) {
+    if (!element) return;
+    if (value) {
+      element.textContent = value;
+      element.style.display = "";
+    } else {
+      element.textContent = "";
+      element.style.display = "none";
+    }
   }
 
   function resetResources() {
-    const resources = document.querySelectorAll(".gallery .resource");
+    const items = document.querySelectorAll(".gallery-grid .gallery-item");
+    items.forEach((item) => {
+      item.style.removeProperty("transform");
+    });
+
+    const resources = document.querySelectorAll(".gallery-grid .resource");
     resources.forEach((resource) => {
-      resource.removeAttribute("style");
-      resource.parentElement.removeAttribute("style");
+      resource.style.removeProperty("height");
+      resource.style.removeProperty("width");
+      resource.style.removeProperty("max-height");
+      resource.style.removeProperty("max-width");
     });
   }
 
   function prevResource() {
+    const items = Array.from(document.querySelectorAll(".gallery-grid .gallery-item"));
     const fullscreen = document.getElementById("fullscreen");
-    if (fullscreen.previousElementSibling) {
-      fullscreen.previousElementSibling.click();
-    } else {
-      // roll back to last image
-      const last = document.querySelector(`[data-position="last"]`);
-      last.click();
-    }
+    if (!fullscreen || items.length === 0) return;
+
+    const currentIndex = items.indexOf(fullscreen);
+    if (currentIndex === -1) return;
+    const nextIndex = currentIndex > 0 ? currentIndex - 1 : items.length - 1;
+    setFullscreen(items[nextIndex]);
   }
 
   function nextResource() {
+    const items = Array.from(document.querySelectorAll(".gallery-grid .gallery-item"));
     const fullscreen = document.getElementById("fullscreen");
-    if (fullscreen.nextElementSibling) {
-      fullscreen.nextElementSibling.click();
-    } else {
-      // roll to first image
-      const first = document.querySelector(`[data-position="first"]`);
-      first.click();
-    }
+    if (!fullscreen || items.length === 0) return;
+
+    const currentIndex = items.indexOf(fullscreen);
+    if (currentIndex === -1) return;
+    const nextIndex = currentIndex < items.length - 1 ? currentIndex + 1 : 0;
+    setFullscreen(items[nextIndex]);
   }
 
   let isScrolling = false;
@@ -447,10 +493,191 @@ const tilePattern = ["full", "wide", "", "wide bottom", "", "", "full", ""];
     grid-column: 1 / -1;
   }
 
+  #fullscreen-controls {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  #fullscreen-controls.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  #fullscreen-backdrop.active {
+    opacity: 0.85;
+  }
+
+  #fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 70vw;
+    height: 100vh;
+    padding: 4vh 4vw;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform: none;
+    z-index: 2;
+  }
+
+  #fullscreen .resource {
+    position: relative;
+    inset: auto;
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+  }
+
+  #fullscreen-controls .fullscreen-next {
+    right: 30vw;
+  }
+
+  .fullscreen-prev,
+  .fullscreen-next {
+    z-index: 4;
+  }
+
+  .fullscreen-control {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: clamp(2.6rem, 6vw, 3.6rem);
+    height: clamp(2.6rem, 6vw, 3.6rem);
+    border: 2px solid rgba(242, 231, 215, 0.55);
+    border-radius: 999px;
+    background: rgba(12, 12, 16, 0.55);
+    color: #f5efe5;
+    padding: 0;
+    font-family: "Cormorant Garamond", "Iowan Old Style", Georgia, serif;
+    font-size: clamp(1.6rem, 3.2vw, 2.4rem);
+    line-height: 1;
+    font-style: italic;
+    letter-spacing: 0.04em;
+    text-decoration: none;
+    transition: transform 150ms ease, background 150ms ease, border-color 150ms ease;
+  }
+
+  .fullscreen-control::after {
+    content: "";
+    position: absolute;
+    inset: -4px;
+    border: 1px solid rgba(242, 231, 215, 0.35);
+    border-radius: 999px;
+    transform: rotate(-5deg);
+    pointer-events: none;
+  }
+
+  .fullscreen-control:hover,
+  .fullscreen-control:focus-visible {
+    background: rgba(18, 18, 24, 0.85);
+    border-color: rgba(255, 255, 255, 0.7);
+    transform: rotate(1deg);
+  }
+
+  .fullscreen-control-glyph {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    line-height: 1;
+    text-align: center;
+    font-style: normal;
+    letter-spacing: 0;
+  }
+
+  .fullscreen-control-arrow {
+    font-size: clamp(1.8rem, 3.8vw, 2.8rem);
+  }
+
+  .fullscreen-control-arrow .fullscreen-control-glyph {
+    transform: translateY(-2px);
+  }
+
+  .fullscreen-close {
+    position: fixed;
+    top: 3.5vh;
+    left: 4vw;
+    z-index: 4;
+    appearance: none;
+    cursor: pointer;
+  }
+
+  .fullscreen-metadata {
+    position: fixed;
+    right: 0;
+    top: 0;
+    z-index: 3;
+    height: 100vh;
+    width: 30vw;
+    min-width: 240px;
+    padding: 3rem 2.5rem;
+    background: rgba(8, 8, 12, 0.85);
+    color: #f5efe5;
+    border-left: 1px solid rgba(242, 231, 215, 0.18);
+    overflow-y: auto;
+  }
+
+  .fullscreen-metadata .meta-title {
+    margin: 0 0 0.6rem;
+    font-size: clamp(1.4rem, 2.4vw, 2.3rem);
+    font-weight: 600;
+    font-family: "Cormorant Garamond", "Iowan Old Style", Georgia, serif;
+  }
+
+  .fullscreen-metadata .meta-line {
+    margin: 0;
+    font-size: 0.85rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #e6d6b9;
+    font-family: "Neue Haas Grotesk", "Helvetica Neue", Arial, sans-serif;
+  }
+
+  .fullscreen-metadata .meta-body {
+    margin: 1rem 0 0;
+    font-size: 1rem;
+    line-height: 1.7;
+    color: #f0e7d8;
+    font-family: "Neue Haas Grotesk", "Helvetica Neue", Arial, sans-serif;
+    white-space: pre-line;
+  }
+
   @media (max-width: 640px) {
     .gallery-grid {
       grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
       gap: 8px;
+    }
+  }
+
+  @media (max-width: 900px) {
+    #fullscreen {
+      width: 100vw;
+      height: 65vh;
+      padding: 2.5vh 6vw;
+    }
+
+    #fullscreen-controls .fullscreen-next {
+      right: 0;
+    }
+
+    .fullscreen-close {
+      top: 2.5vh;
+      left: 6vw;
+    }
+
+    .fullscreen-metadata {
+      top: auto;
+      bottom: 0;
+      width: 100vw;
+      height: 35vh;
+      max-width: none;
+      min-width: 0;
+      border-left: none;
+      border-top: 1px solid rgba(242, 231, 215, 0.18);
     }
   }
 </style>
