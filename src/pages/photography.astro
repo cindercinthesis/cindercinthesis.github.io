@@ -10,8 +10,7 @@ import Gallery from "../components/Gallery.astro";
 
     <section class="hero">
       <p class="eyebrow">Photography</p>
-      <h2>Light and shadow, collected.</h2>
-      <p class="lede">A gallery of stills—step through.</p>
+      <h2>Where my eyes are no longer mine</h2>
     </section>
 
     <section class="content">
@@ -68,6 +67,52 @@ import Gallery from "../components/Gallery.astro";
     margin-top: 2rem;
   }
 
+  .feature-links {
+    margin-top: 2.6rem;
+    display: grid;
+    gap: 2rem;
+  }
+
+  .feature {
+    display: grid;
+    gap: 1rem;
+    padding: 1.4rem 1.5rem;
+    border: 1px solid rgba(242, 231, 215, 0.28);
+    background: rgba(12, 12, 18, 0.6);
+  }
+
+  .feature-text {
+    font-family: "Neue Haas Grotesk", "Helvetica Neue", Arial, sans-serif;
+    font-size: 1.05rem;
+    line-height: 1.7;
+    margin: 0;
+    color: #f5efe5;
+  }
+
+  .feature-text a {
+    color: #f2e7d7;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(242, 231, 215, 0.4);
+  }
+
+  .feature-text a:hover,
+  .feature-text a:focus-visible {
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.65);
+  }
+
+  .feature-image {
+    display: block;
+    border: 1px solid rgba(242, 231, 215, 0.2);
+    background: rgba(0, 0, 0, 0.2);
+  }
+
+  .feature-image img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
   :global(.header) {
     background: #f2e7d7;
     padding: 1rem 1.25rem;
@@ -97,6 +142,10 @@ import Gallery from "../components/Gallery.astro";
 
     .hero {
       margin-top: 1.3rem;
+    }
+
+    .feature {
+      padding: 1.2rem 1.1rem;
     }
   }
 </style>
