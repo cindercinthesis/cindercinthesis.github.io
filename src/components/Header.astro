@@ -24,11 +24,15 @@ const showSocials = Astro.props.showSocials ?? true;
   </div>
   <nav class="header-nav">
     {
-      menuItems.map((item) => (
-        <a href={item.href} class={`header-link${item.href === Astro.url.pathname ? "-active" : ""}`}>
-          {item.name}
-        </a>
-      ))
+      menuItems.map((item) => {
+        const isHome = item.href === "/";
+        const isActive = isHome ? ["/", "/home/"].includes(Astro.url.pathname) : Astro.url.pathname.startsWith(item.href);
+        return (
+          <a href={item.href} class={`header-link${isActive ? "-active" : ""}`}>
+            {item.name}
+          </a>
+        );
+      })
     }
     {/*
       {showSocials && <SocialIcons />}

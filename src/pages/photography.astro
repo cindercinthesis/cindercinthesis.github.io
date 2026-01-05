@@ -114,8 +114,37 @@ import Gallery from "../components/Gallery.astro";
   }
 
   :global(.header) {
+    position: relative;
     background: #f2e7d7;
     padding: 1rem 1.25rem;
+    overflow: visible;
+    --header-edge: calc((100vw - 100%) / 2);
+    --pencil-curve: #e6d6b9;
+  }
+
+  :global(.header)::before,
+  :global(.header)::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: var(--header-edge);
+    pointer-events: none;
+  }
+
+  :global(.header)::before {
+    left: calc(0px - var(--header-edge) - 2px);
+    width: calc(var(--header-edge) + 2px);
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Crect width='100' height='100' fill='%230b0b10'/%3E%3Cpath d='M0 24C28 46 62 46 100 0' stroke='%23e6d6b9' stroke-width='6' fill='none' stroke-linecap='round'/%3E%3Cpath d='M0 76C28 54 62 54 100 100' stroke='%23e6d6b9' stroke-width='6' fill='none' stroke-linecap='round'/%3E%3Cellipse cx='50' cy='12' rx='20' ry='6' fill='%23e6d6b9'/%3E%3Cellipse cx='50' cy='88' rx='20' ry='6' fill='%23e6d6b9'/%3E%3Ccircle cx='40' cy='10' r='2.5' fill='%23f9f1e6'/%3E%3C/svg%3E")
+      no-repeat center / 100% 100%;
+  }
+
+  :global(.header)::after {
+    right: calc(0px - var(--header-edge));
+    clip-path: polygon(0 0, 82% 0, 100% 50%, 82% 100%, 0 100%);
+    background: #0b0b10
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cpath d='M0 0 C62 0 86 20 100 50' stroke='%23e6d6b9' stroke-width='6' fill='none' stroke-linecap='butt'/%3E%3Cpath d='M0 100 C62 100 86 80 100 50' stroke='%23e6d6b9' stroke-width='6' fill='none' stroke-linecap='butt'/%3E%3Cellipse cx='42' cy='50' rx='5' ry='26' fill='%23e6d6b9'/%3E%3C/svg%3E")
+      no-repeat center / 100% 100%;
   }
 
   :global(.header h1) {
