@@ -1,0 +1,916 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Header from "../../components/Header.astro";
+import { getCollection } from "astro:content";
+
+const entries = await getCollection("writing");
+const posts = entries
+  .filter((post) => !post.data.draft)
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+
+const formatCategory = (category: string) => {
+  const normalized = category.trim().toLowerCase();
+  if (!normalized) return "";
+  return normalized[0].toUpperCase() + normalized.slice(1);
+};
+
+const categoryMap = new Map<string, typeof posts>();
+
+for (const post of posts) {
+  for (const rawCategory of post.data.categories) {
+    const category = rawCategory.trim();
+    if (!category) continue;
+    const group = categoryMap.get(category) ?? [];
+    group.push(post);
+    categoryMap.set(category, group);
+  }
+}
+
+const categories = Array.from(categoryMap.entries())
+  .map(([name, items]) => ({
+    name,
+    label: formatCategory(name),
+    count: items.length,
+    posts: [...items].sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf()),
+  }))
+  .sort((a, b) => a.label.localeCompare(b.label));
+
+const totalPosts = posts.length;
+
+const formatDate = (date: Date) =>
+  date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  });
+
+const formatMonthYear = (date: Date) =>
+  date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    timeZone: "UTC",
+  });
+---
+
+<Layout title="Cindercinthesis - Writing" description="Words and winds.">
+  <main class="writing-shell">
+    <div class="header-shell">
+      <Header />
+    </div>
+
+    <input id="map-toggle" class="map-toggle" type="checkbox" aria-hidden="true" />
+    <input id="category-toggle" class="category-toggle" type="checkbox" aria-hidden="true" />
+    <label for="map-toggle" class="edge-button edge-button-map">
+      <span class="edge-button-label">Map</span>
+    </label>
+    <label for="category-toggle" class="edge-button edge-button-category">
+      <span class="edge-button-label">Categories</span>
+    </label>
+
+    <div class="writing-frame">
+      <aside class="map-panel" aria-label="Writing map">
+        <div class="map-panel-inner">
+          <div class="map-panel-title">Map</div>
+          <p class="map-panel-subtitle">Browse the archive by category.</p>
+          {
+            categories.length ? (
+              categories.map((category) => (
+                <details class="map-group">
+                  <summary>
+                    <span class="map-group-name">{category.label}</span>
+                    <span class="map-group-count">{category.count}</span>
+                  </summary>
+                  <ul>
+                    {category.posts.map((post) => (
+                      <li>
+                        <a href={`/writing/${post.slug}/`}>
+                          <span class="map-post-title">{post.data.title}</span>
+                          <span class="map-post-date">{formatMonthYear(post.data.date)}</span>
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+              ))
+            ) : (
+              <p class="map-panel-empty">No writing entries yet.</p>
+            )
+          }
+        </div>
+      </aside>
+
+      <div class="writing-content">
+        <div class="writing-inner">
+          <div class="map-controls">
+            <div class="filter-status" aria-live="polite">
+              <span class="filter-label">Showing</span>
+              <span class="filter-active" data-active-label>All</span>
+              <span class="filter-divider">/</span>
+              <span class="filter-count"><span data-active-count>{totalPosts}</span> posts</span>
+            </div>
+          </div>
+
+          <section class="hero">
+            <p class="eyebrow">Writing</p>
+            <h2>Fragments, letters, and notes on existing.</h2>
+            <p class="lede">A quieter corner; wander through the words.</p>
+          </section>
+
+          <section class="writing-grid">
+            <div class="post-feed">
+              {posts.length ? (
+                posts.map((post, index) => {
+                  const displayCategories = post.data.categories.map(formatCategory);
+                  const categoryData = post.data.categories.map((category) => category.trim());
+                  const postImage = post.data.image;
+                  const postImageAlt = post.data.imageAlt ?? post.data.title;
+                  return (
+                    <article
+                      class={`post-card${postImage ? " has-image" : ""}`}
+                      data-post
+                      data-categories={JSON.stringify(categoryData)}
+                      style={`--delay: ${index * 80}ms;`}
+                    >
+                      <div class="post-body">
+                        <div class="post-meta">
+                          <time datetime={post.data.date.toISOString()}>{formatDate(post.data.date)}</time>
+                          <span class="meta-divider">⚆</span>
+                          <span class="meta-categories">{displayCategories.join(" | ")}</span>
+                        </div>
+                        <h3 class="post-title">
+                          <a href={`/writing/${post.slug}/`}>{post.data.title}</a>
+                        </h3>
+                        {post.data.description && <p class="post-description">{post.data.description}</p>}
+                      </div>
+                      {postImage && (
+                        <a class="post-image" href={`/writing/${post.slug}/`}>
+                          <img src={postImage} alt={postImageAlt} loading={index <= 1 ? "eager" : "lazy"} decoding="async" />
+                        </a>
+                      )}
+                    </article>
+                  );
+                })
+              ) : (
+                <div class="empty-state">
+                  <h3>No writing yet.</h3>
+                  <p>Add entries to <code>src/content/writing</code> to see them here.</p>
+                </div>
+              )}
+            </div>
+
+            <aside class="category-panel" aria-label="Category filters">
+              <div class="panel-title">Categories</div>
+              <p class="panel-subtitle">Filter the archive.</p>
+              {categories.length ? (
+                <ul class="category-list">
+                  <li>
+                    <button type="button" class="category-button is-active" data-filter="all" data-label="All" aria-pressed="true">
+                      <span>All</span>
+                      <span class="category-count">{totalPosts}</span>
+                    </button>
+                  </li>
+                  {categories.map((category, index) => (
+                    <li style={`--delay: ${index * 60 + 120}ms;`}>
+                      <button type="button" class="category-button" data-filter={category.name} data-label={category.label} aria-pressed="false">
+                        <span>{category.label}</span>
+                        <span class="category-count">{category.count}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p class="panel-empty">No categories yet.</p>
+              )}
+            </aside>
+          </section>
+        </div>
+      </div>
+    </div>
+  </main>
+</Layout>
+
+<script is:inline>
+  const filterButtons = Array.from(document.querySelectorAll("[data-filter]"));
+  const posts = Array.from(document.querySelectorAll("[data-post]"));
+  const activeLabel = document.querySelector("[data-active-label]");
+  const activeCount = document.querySelector("[data-active-count]");
+
+  const getPostCategories = (post) => {
+    try {
+      return JSON.parse(post.dataset.categories || "[]");
+    } catch (error) {
+      return [];
+    }
+  };
+
+  const applyFilter = (filter) => {
+    let visibleCount = 0;
+    let activeLabelText = "All";
+
+    filterButtons.forEach((button) => {
+      const isActive = button.dataset.filter === filter;
+      button.classList.toggle("is-active", isActive);
+      button.setAttribute("aria-pressed", isActive ? "true" : "false");
+      if (isActive) {
+        activeLabelText = button.dataset.label || button.textContent || filter;
+      }
+    });
+
+    posts.forEach((post) => {
+      const categories = getPostCategories(post);
+      const matches = filter === "all" || categories.includes(filter);
+      post.hidden = !matches;
+      post.classList.toggle("is-hidden", !matches);
+      if (matches) visibleCount += 1;
+    });
+
+    if (activeLabel) {
+      activeLabel.textContent = activeLabelText;
+    }
+    if (activeCount) {
+      activeCount.textContent = String(visibleCount);
+    }
+  };
+
+  if (filterButtons.length) {
+    filterButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        const filter = button.dataset.filter || "all";
+        applyFilter(filter);
+      });
+    });
+
+    applyFilter("all");
+  }
+
+  const mapToggle = document.getElementById("map-toggle");
+  const categoryToggle = document.getElementById("category-toggle");
+  const interactiveSelector = "a, button, summary, input, select, textarea, label";
+  const panelSelector = ".map-panel, .category-panel, .edge-button";
+
+  document.addEventListener("click", (event) => {
+    if (!mapToggle?.checked && !categoryToggle?.checked) return;
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+    if (target.closest(panelSelector)) return;
+    if (target.closest(interactiveSelector)) return;
+    mapToggle.checked = false;
+    categoryToggle.checked = false;
+  });
+</script>
+
+<style>
+  :global(body) {
+    --ink: #1c1a17;
+    --ink-soft: #3f3932;
+    --ink-fade: #6a5f54;
+    --paper: #f9f1e6;
+    --paper-strong: #efe2cf;
+    --sand: #e2d3be;
+    --accent: #c28d5c;
+    --accent-strong: #a46f45;
+    --panel-width: clamp(220px, 22vw, 320px);
+    --edge-button-length: clamp(220px, 34vh, 320px);
+    --edge-button-width: 48px;
+    --edge-button-color: #4b2d1a;
+    background-image: radial-gradient(circle at 15% 15%, #f9f1e6 0%, #f5ecdf 42%, #efe2cf 72%, #e7d8c1 100%),
+      linear-gradient(120deg, rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0));
+    background-attachment: fixed;
+    color: var(--ink);
+    font-family: "Cormorant Garamond", "Iowan Old Style", Georgia, serif;
+    letter-spacing: 0.01em;
+  }
+
+  .writing-shell {
+    padding: 2.5rem 0 4.5rem;
+    position: relative;
+  }
+
+  .header-shell {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+  }
+
+  :global(.header) {
+    position: relative;
+    background: rgb(23, 23, 23);
+    overflow: visible;
+    --header-edge: calc((100vw - 100%) / 2);
+  }
+
+  :global(.header)::before,
+  :global(.header)::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: var(--header-edge);
+    background: rgb(23, 23, 23);
+    pointer-events: none;
+  }
+
+  :global(.header)::before {
+    left: calc(0px - var(--header-edge));
+    clip-path: polygon(100% 0, 0 50%, 100% 100%);
+  }
+
+  :global(.header)::after {
+    right: calc(0px - var(--header-edge));
+    clip-path: polygon(0 0, 100% 50%, 0 100%);
+  }
+
+  .writing-frame {
+    display: block;
+    position: relative;
+    overflow-x: hidden;
+    overflow-y: visible;
+  }
+
+  .map-toggle,
+  .category-toggle {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .edge-button {
+    position: fixed;
+    top: clamp(120px, 18vh, 220px);
+    z-index: 6;
+    height: var(--edge-button-length);
+    width: var(--edge-button-width);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 1px solid rgba(28, 26, 23, 0.2);
+    border-radius: 999px 0 0 999px;
+    background: rgba(249, 241, 230, 0.95);
+    box-shadow: 0 12px 24px rgba(28, 26, 23, 0.12);
+    font-family: "Neue Haas Grotesk", "Helvetica Neue", Arial, sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+    color: var(--edge-button-color);
+    cursor: pointer;
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease, border-color 160ms ease;
+  }
+
+  .edge-button:hover,
+  .edge-button:focus-visible {
+    border-color: rgba(28, 26, 23, 0.35);
+    background: #ffffff;
+    box-shadow: 0 16px 30px rgba(28, 26, 23, 0.16);
+    outline: none;
+  }
+
+  .edge-button-map {
+    left: 0;
+    border-radius: 0 999px 999px 0;
+  }
+
+  .edge-button-label {
+    display: inline-block;
+  }
+
+  .edge-button-map .edge-button-label {
+    transform: rotate(180deg);
+  }
+
+  .edge-button-category {
+    right: 0;
+  }
+
+  .map-toggle:checked ~ .edge-button-map {
+    border-color: rgba(194, 141, 92, 0.5);
+    background: rgba(194, 141, 92, 0.18);
+  }
+
+  .category-toggle:checked ~ .edge-button-category {
+    border-color: rgba(194, 141, 92, 0.5);
+    background: rgba(194, 141, 92, 0.18);
+  }
+
+
+  .map-panel {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: var(--panel-width);
+    z-index: 5;
+    transform: translateX(-110%);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 260ms ease, opacity 260ms ease;
+  }
+
+  .map-toggle:checked ~ .writing-frame .map-panel {
+    transform: translateX(0);
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .map-panel-inner {
+    height: 100%;
+    overflow-y: auto;
+    padding: 1.5rem 1.2rem 2rem;
+    border-right: 1px solid rgba(28, 26, 23, 0.08);
+    border-radius: 0 18px 18px 0;
+    background: rgba(252, 248, 243, 0.95);
+    box-shadow: 12px 0 30px rgba(0, 0, 0, 0.08);
+  }
+
+  .map-panel-title {
+    font-size: 1.1rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: 0.25rem;
+    color: var(--ink);
+  }
+
+  .map-panel-subtitle {
+    font-family: "Neue Haas Grotesk", "Helvetica Neue", Arial, sans-serif;
+    font-size: 0.95rem;
+    color: var(--ink-fade);
+    margin: 0 0 1.4rem;
+  }
+
+  .map-panel-empty {
+    font-family: "Neue Haas Grotesk", "Helvetica Neue", Arial, sans-serif;
+    color: var(--ink-fade);
+  }
+
+  .map-group {
+    border-bottom: 1px solid rgba(28, 26, 23, 0.08);
+    padding-bottom: 0.9rem;
+    margin-bottom: 0.9rem;
+  }
+
+  .map-group summary {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    list-style: none;
+    font-family: "Neue Haas Grotesk", "Helvetica Neue", Arial, sans-serif;
+    font-size: 0.95rem;
+    letter-spacing: 0.08em;
+    color: var(--ink);
+  }
+
+  .map-group summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .map-group-name {
+    font-weight: 600;
+  }
+
+  .map-group-count {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    background: rgba(194, 141, 92, 0.2);
+    color: var(--accent-strong);
+  }
+
+  .map-group ul {
+    list-style: none;
+    margin: 0.7rem 0 0;
+    padding: 0;
+    display: grid;
+    gap: 0.55rem;
+  }
+
+  .map-group a {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    text-decoration: none;
+    color: var(--ink-soft);
+    font-family: "Neue Haas Grotesk", "Helvetica Neue", Arial, sans-serif;
+    font-size: 0.95rem;
+    border-radius: 10px;
+    padding: 0.25rem 0.4rem;
+    transition: background 160ms ease, color 160ms ease;
+  }
+
+  .map-group a:hover,
+  .map-group a:focus-visible {
+    background: rgba(194, 141, 92, 0.15);
+    color: var(--ink);
+    outline: none;
+  }
+
+  .map-post-title {
+    font-weight: 500;
+  }
+
+  .map-post-date {
+    color: var(--ink-fade);
+    font-size: 0.85rem;
+    white-space: nowrap;
+  }
+
+  .writing-content {
+    width: 100%;
+  }
+
+  .writing-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 1.5rem 2rem;
+  }
+
+  .map-controls {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .filter-status {
+    font-family: "Neue Haas Grotesk", "Helvetica Neue", Arial, sans-serif;
+    font-size: 0.95rem;
+    color: var(--ink-fade);
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+  }
+
+  .filter-active {
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  .filter-divider {
+    opacity: 0.5;
+  }
+
+  .hero {
+    margin-top: 1.5rem;
+    display: grid;
+    gap: 1.1rem;
+  }
+
+  .eyebrow {
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    color: var(--ink-fade);
+    margin: 0;
+  }
+
+  .hero h2 {
+    font-size: clamp(2.3rem, 5vw, 3.4rem);
+    line-height: 1.08;
+    margin: 0;
+    color: var(--ink);
+  }
+
+  .lede {
+    font-family: "Neue Haas Grotesk", "Helvetica Neue", Arial, sans-serif;
+    font-size: 1.05rem;
+    line-height: 1.8;
+    max-width: 700px;
+    color: var(--ink-soft);
+    margin: 0;
+  }
+
+  .writing-grid {
+    margin-top: 2.5rem;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2.5rem;
+    align-items: start;
+    transition: grid-template-columns 260ms ease;
+  }
+
+  .post-feed {
+    display: grid;
+    gap: 2rem;
+    width: 90%;
+    margin: 0 auto;
+    transition: width 260ms ease, margin 260ms ease;
+  }
+
+  .post-card {
+    display: grid;
+    padding: 1.6rem 1.8rem;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.75);
+    border: 1px solid rgba(28, 26, 23, 0.1);
+    box-shadow: 0 18px 40px rgba(28, 26, 23, 0.08);
+    animation: rise 500ms ease both;
+    animation-delay: var(--delay);
+    transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+  }
+
+  .post-card.has-image {
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    align-items: center;
+    gap: 1.6rem;
+  }
+
+  .post-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(28, 26, 23, 0.2);
+    box-shadow: 0 20px 45px rgba(28, 26, 23, 0.12);
+  }
+
+  .post-card.is-hidden {
+    display: none;
+  }
+
+  .post-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    font-family: "Neue Haas Grotesk", "Helvetica Neue", Arial, sans-serif;
+    font-size: 0.85rem;
+    letter-spacing: 0.08em;
+    color: var(--ink-fade);
+  }
+
+  .post-body {
+    min-width: 0;
+  }
+
+  .meta-divider {
+    opacity: 0.6;
+  }
+
+  .post-title {
+    margin: 0.8rem 0 0.4rem;
+    font-size: 1.7rem;
+    color: var(--ink);
+  }
+
+  .post-title a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .post-title a:hover,
+  .post-title a:focus-visible {
+    color: var(--accent-strong);
+    outline: none;
+  }
+
+  .post-description {
+    margin: 0;
+    font-family: "Neue Haas Grotesk", "Helvetica Neue", Arial, sans-serif;
+    font-size: 1.02rem;
+    color: var(--ink-soft);
+    line-height: 1.65;
+  }
+
+  .post-image {
+    display: block;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid rgba(28, 26, 23, 0.08);
+    background: rgba(255, 255, 255, 0.6);
+    min-height: 160px;
+    aspect-ratio: 4 / 3;
+  }
+
+  .post-image img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .category-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    height: 100vh;
+    width: var(--panel-width);
+    padding: 1.8rem 1.6rem;
+    border-radius: 20px 0 0 20px;
+    background: rgba(250, 247, 242, 0.95);
+    border: 1px solid rgba(28, 26, 23, 0.08);
+    box-shadow: -12px 0 30px rgba(0, 0, 0, 0.08);
+    overflow-y: auto;
+    transform: translateX(110%);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 260ms ease, opacity 260ms ease;
+    z-index: 5;
+  }
+
+  .category-toggle:checked ~ .writing-frame .category-panel {
+    transform: translateX(0);
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .panel-title {
+    font-size: 1.05rem;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    margin-bottom: 0.35rem;
+    color: var(--ink);
+  }
+
+  .panel-subtitle {
+    font-family: "Neue Haas Grotesk", "Helvetica Neue", Arial, sans-serif;
+    margin: 0 0 1.5rem;
+    color: var(--ink-fade);
+  }
+
+  .panel-empty {
+    font-family: "Neue Haas Grotesk", "Helvetica Neue", Arial, sans-serif;
+    color: var(--ink-fade);
+  }
+
+  .category-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.8rem;
+  }
+
+  .category-button {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.65rem 0.85rem;
+    border-radius: 14px;
+    border: 1px solid transparent;
+    background: rgba(255, 255, 255, 0.8);
+    font-family: "Neue Haas Grotesk", "Helvetica Neue", Arial, sans-serif;
+    font-size: 0.95rem;
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease, background 160ms ease;
+    animation: rise 450ms ease both;
+    animation-delay: var(--delay);
+  }
+
+  .category-button:hover,
+  .category-button:focus-visible {
+    border-color: rgba(28, 26, 23, 0.2);
+    transform: translateY(-2px);
+    background: rgba(255, 255, 255, 0.95);
+    outline: none;
+  }
+
+  .category-button.is-active {
+    border-color: rgba(194, 141, 92, 0.5);
+    background: rgba(194, 141, 92, 0.16);
+    color: var(--ink);
+    box-shadow: 0 12px 24px rgba(194, 141, 92, 0.2);
+  }
+
+  .category-count {
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    background: rgba(28, 26, 23, 0.08);
+    color: var(--ink);
+  }
+
+  .empty-state {
+    padding: 2rem;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(28, 26, 23, 0.1);
+    text-align: center;
+  }
+
+  .empty-state h3 {
+    margin-top: 0;
+  }
+
+  .empty-state p {
+    font-family: "Neue Haas Grotesk", "Helvetica Neue", Arial, sans-serif;
+    color: var(--ink-fade);
+    margin-bottom: 0;
+  }
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @media (max-width: 960px) {
+    .writing-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .post-feed {
+      width: 100%;
+      margin: 0;
+    }
+
+    .map-controls {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  }
+
+  @media (max-width: 900px) {
+    .post-card.has-image {
+      grid-template-columns: 1fr;
+    }
+
+    .post-image {
+      order: -1;
+    }
+  }
+
+  @media (max-width: 720px) {
+    :global(body) {
+      --panel-width: 100vw;
+    }
+
+    .writing-shell {
+      padding: 2.2rem 0 3.8rem;
+    }
+
+    .map-panel {
+      width: var(--panel-width);
+      transform: translateX(-110%);
+    }
+
+    .map-panel-inner {
+      border-right: none;
+      border-radius: 0;
+      border-bottom: 1px solid rgba(28, 26, 23, 0.08);
+    }
+
+    .category-panel {
+      width: var(--panel-width);
+      border-radius: 0;
+    }
+
+    .edge-button {
+      top: auto;
+      bottom: 1.2rem;
+      writing-mode: horizontal-tb;
+      text-orientation: mixed;
+      height: auto;
+      width: auto;
+      padding: 0.55rem 1.1rem;
+      letter-spacing: 0.12em;
+      border-radius: 999px;
+    }
+
+    .edge-button-map {
+      left: 1rem;
+    }
+
+    .edge-button-category {
+      right: 1rem;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .header-shell {
+      padding: 0 1.1rem;
+    }
+
+    .writing-inner {
+      padding: 0 1.1rem 2rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .post-card,
+    .category-button {
+      animation: none;
+    }
+
+    .map-panel,
+    .category-panel,
+    .writing-frame {
+      transition: none;
+    }
+  }
+</style>
