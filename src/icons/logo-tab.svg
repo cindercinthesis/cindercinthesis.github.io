@@ -833,7 +833,7 @@
     <circle cx="171.3" cy="343.6" r="2.77" fill="#fff1c6" opacity="0.88" />
   </g>
 
-  <g transform="translate(30 176) scale(0.5)">
+  <g transform="translate(-4 125) scale(0.72)">
     <g transform="scale(0.78,1) translate(115,0)" stroke="#111" stroke-width="34" stroke-linecap="round" stroke-linejoin="round" fill="none">
       <g transform="translate(-80,-70)">
         <path d="M610 175
