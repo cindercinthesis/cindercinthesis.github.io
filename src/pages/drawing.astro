@@ -1,0 +1,180 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Header from "../components/Header.astro";
+import Gallery from "../components/Gallery.astro";
+---
+
+<Layout title="Cindercinthesis — Drawing" description="Drawing gallery.">
+  <main class="page-shell">
+    <Header />
+
+    <section class="hero">
+      <p class="eyebrow">Drawing</p>
+      <h2>Bring in a form</h2>
+    </section>
+
+    <section class="content">
+      <Gallery class:list={"gallery"} folder="drawing-front" filter="image" />
+    </section>
+  </main>
+</Layout>
+
+<style>
+  :global(body) {
+    background: radial-gradient(circle at 20% 20%, #0f0f14 0%, #0b0b10 35%, #07070c 65%, #050508 100%);
+    color: #ffffff;
+    font-family: "Cormorant Garamond", "Iowan Old Style", Georgia, serif;
+    letter-spacing: 0.01em;
+  }
+
+  .page-shell {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem 4.5rem;
+  }
+
+  .hero {
+    margin-top: 2rem;
+    display: grid;
+    gap: 1.1rem;
+  }
+
+  .eyebrow {
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    color: #e6d6b9;
+    margin: 0;
+  }
+
+  .hero h2 {
+    font-size: clamp(2.3rem, 5vw, 3.2rem);
+    line-height: 1.08;
+    margin: 0;
+    color: #ffffff;
+  }
+
+  .lede {
+    font-family: "Neue Haas Grotesk", "Helvetica Neue", Arial, sans-serif;
+    font-size: 1.05rem;
+    line-height: 1.8;
+    max-width: 680px;
+    color: #f0e7d8;
+    margin: 0;
+  }
+
+  .content {
+    margin-top: 2rem;
+  }
+
+  .feature-links {
+    margin-top: 2.6rem;
+    display: grid;
+    gap: 2rem;
+  }
+
+  .feature {
+    display: grid;
+    gap: 1rem;
+    padding: 1.4rem 1.5rem;
+    border: 1px solid rgba(242, 231, 215, 0.28);
+    background: rgba(12, 12, 18, 0.6);
+  }
+
+  .feature-text {
+    font-family: "Neue Haas Grotesk", "Helvetica Neue", Arial, sans-serif;
+    font-size: 1.05rem;
+    line-height: 1.7;
+    margin: 0;
+    color: #f5efe5;
+  }
+
+  .feature-text a {
+    color: #f2e7d7;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(242, 231, 215, 0.4);
+  }
+
+  .feature-text a:hover,
+  .feature-text a:focus-visible {
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.65);
+  }
+
+  .feature-image {
+    display: block;
+    border: 1px solid rgba(242, 231, 215, 0.2);
+    background: rgba(0, 0, 0, 0.2);
+  }
+
+  .feature-image img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  :global(.header) {
+    position: relative;
+    background: #f2e7d7;
+    padding: 1rem 1.25rem;
+    overflow: visible;
+    --header-edge: calc((100vw - 100%) / 2);
+  }
+
+  :global(.header)::before,
+  :global(.header)::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: var(--header-edge);
+    background: #f2e7d7
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cpath d='M0 50 C15 20 35 80 50 50 C65 20 85 80 100 50' stroke='%231c1a17' stroke-width='4' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+      no-repeat center / 100% 100%;
+    pointer-events: none;
+  }
+
+  :global(.header)::before {
+    left: calc(0px - var(--header-edge));
+  }
+
+  :global(.header)::after {
+    right: calc(0px - var(--header-edge));
+  }
+
+  :global(.header h1) {
+    color: #1c1a17;
+  }
+
+  :global(.header-link),
+  :global(.header-link-active) {
+    color: #1c1a17;
+  }
+
+  :global(.header-link-active) {
+    color: #7b6a55;
+  }
+
+  :global(.header-link:hover) {
+    color: #7b6a55;
+  }
+
+  :global(.corner-logo) {
+    color: #f2e7d7;
+    opacity: 0.8;
+  }
+
+  @media (max-width: 640px) {
+    .page-shell {
+      padding: 2.3rem 1.1rem 3.5rem;
+    }
+
+    .hero {
+      margin-top: 1.3rem;
+    }
+
+    .feature {
+      padding: 1.2rem 1.1rem;
+    }
+  }
+</style>
