@@ -6,9 +6,3 @@ categories: ["notes", "memory"]
 image: "/assets/img/ShenzhenRewind.png"
 imageAlt: "City skyline at dusk"
 ---
-The air keeps receipts.
-
-## Small inventory
-- a receipt of light
-- a whisper of dust
-- a moment that will not stay
