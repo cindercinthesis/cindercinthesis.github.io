@@ -232,6 +232,19 @@ const dev = import.meta.env.DEV;
     color: #505050; /* Adjust color to match the hover state */
   }
 
+  .header-left .header-home {
+    color: inherit;
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .header-left .header-home:hover,
+  .header-left .header-home:focus-visible {
+    color: #ffffff;
+    outline: 2px solid rgba(255, 255, 255, 0.6);
+    outline-offset: 3px;
+  }
+
   .header-nav {
     display: flex;
     align-items: center;
