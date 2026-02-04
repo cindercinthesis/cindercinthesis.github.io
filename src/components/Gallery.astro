@@ -88,7 +88,7 @@ const tilePattern = ["full", "wide", "", "wide bottom", "", "", "full", ""];
           data-position={`${index == 0 ? "first" : index + 1 == filteredResources.length ? "last" : "middle"}`}
           onclick="setFullscreen(this)"
           ontouchend="if (!isScrolling) setFullscreen(this)"
-          class={`gallery-item relative cursor-zoom-in fullscreen:cursor-auto ${spanClass}`}
+          class={`gallery-item relative cursor-pointer fullscreen:cursor-auto ${spanClass}`}
           style={`aspect-ratio: ${CloudinaryResource.width} / ${CloudinaryResource.height};`}
           data-alt={altText}
           data-meta-title={metaTitle}
