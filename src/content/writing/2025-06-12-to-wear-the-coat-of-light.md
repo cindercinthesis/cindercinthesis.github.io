@@ -19,7 +19,7 @@ I've always known how.</p>
 <p>Mom knows me, she said I should write something. I wouldn't be satisfied if I didn't. I agree but what is there to write that I haven't written in my journal before? I feel no strong desire to write, nothing begs to be written.</p>
 <br>
 
-<p>It's funny how my birthday occurs during a time of sadness after weeks and weeks of bliss. I have a sense of how this sadness came about, tension between working for Matt and Dave and working for myself, applications for PhDs and scholarships.</p>
+<p>It's funny how my birthday occurs during a time of sadness after weeks and weeks of bliss. I have a sense of how this sadness came about, tension between working for M and D and working for myself, applications for PhDs and scholarships.</p>
 <br>
 
 <p>See the red grass in Lagunita meadow dancing in the setting sun. To wear the coat of light! I want to wear the coat of light.</p>
