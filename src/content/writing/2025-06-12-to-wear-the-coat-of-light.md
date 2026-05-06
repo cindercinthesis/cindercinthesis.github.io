@@ -17,6 +17,7 @@ I felt like I should celebrate today, today I turn 23! But I didn't know how.<br
 I've always known how.</p>
 <br>
 
+
 <p>Mom knows me, she said I should write something. I wouldn't be satisfied if I didn't. I agree but what is there to write that I haven't written in my journal before? I feel no strong desire to write, nothing begs to be written.</p>
 <br>
 
