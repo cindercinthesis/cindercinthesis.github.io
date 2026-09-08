@@ -2,6 +2,7 @@
 import Layout from "../../layouts/Layout.astro";
 import Header from "../../components/Header.astro";
 import { getCollection } from "astro:content";
+import { formatCategory, normalizeCategories } from "../../utils/categories";
 
 export async function getStaticPaths() {
   const entries = await getCollection("writing");
@@ -19,18 +20,10 @@ const { Content } = await post.render();
 const entries = await getCollection("writing");
 const posts = entries.filter((entry) => !entry.data.draft).sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
 
-const formatCategory = (category: string) => {
-  const normalized = category.trim().toLowerCase();
-  if (!normalized) return "";
-  return normalized[0].toUpperCase() + normalized.slice(1);
-};
-
 const categoryMap = new Map<string, typeof posts>();
 
 for (const entry of posts) {
-  for (const rawCategory of entry.data.categories) {
-    const category = rawCategory.trim();
-    if (!category) continue;
+  for (const category of normalizeCategories(entry.data.categories)) {
     const group = categoryMap.get(category) ?? [];
     group.push(entry);
     categoryMap.set(category, group);
@@ -119,7 +112,7 @@ const formatMonthYear = (date: Date) =>
               <div class="post-meta">
                 <time datetime={post.data.date.toISOString()}>{formatDate(post.data.date)}</time>
                 <span class="meta-divider">⚆</span>
-                <span>{post.data.categories.map(formatCategory).join(" | ")}</span>
+                <span>{normalizeCategories(post.data.categories).map(formatCategory).join(" | ")}</span>
               </div>
             </header>
 
