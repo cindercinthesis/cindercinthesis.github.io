@@ -59,14 +59,48 @@ const search = await cloudinary.search
 
 const resources = search.resources as CloudinaryResource[];
 const filteredResources = Astro.props.filter ? resources.filter((resource) => resource.resource_type == Astro.props.filter) : resources;
-const tilePattern = ["full", "wide", "", "wide bottom", "", "", "full", ""];
 const manualSpanClasses: Record<string, string> = {
-  single: "",
+  single: "single",
   half: "wide",
   wide: "wide",
   full: "full",
-  "pair-left": "pair-left",
-  "pair-right": "pair-right",
+};
+
+type FractionalPlacement = {
+  denominator: 2 | 3 | 4;
+  position: number;
+};
+
+const placementAliases: Record<string, FractionalPlacement> = {
+  "pair-left": { denominator: 2, position: 1 },
+  "pair-right": { denominator: 2, position: 2 },
+  "triplet-left": { denominator: 3, position: 1 },
+  "triplet-mid": { denominator: 3, position: 2 },
+  "triplet-right": { denominator: 3, position: 3 },
+  "quadruplet-1": { denominator: 4, position: 1 },
+  "quadruplet-2": { denominator: 4, position: 2 },
+  "quadruplet-3": { denominator: 4, position: 3 },
+  "quadruplet-4": { denominator: 4, position: 4 },
+};
+
+const getFractionalPlacement = (span: string, positionValue?: string, slotValue?: string): FractionalPlacement | undefined => {
+  const slotMatch = slotValue?.match(/^([1-4])\/([234])$/);
+  if (slotMatch) {
+    const position = Number(slotMatch[1]);
+    const denominator = Number(slotMatch[2]) as FractionalPlacement["denominator"];
+    if (position <= denominator) return { denominator, position };
+  }
+
+  if (placementAliases[span]) return placementAliases[span];
+
+  const fractionMatch = span.match(/^1\/([234])$/);
+  if (!fractionMatch) return undefined;
+
+  const denominator = Number(fractionMatch[1]) as FractionalPlacement["denominator"];
+  const position = Number(positionValue);
+  if (!Number.isInteger(position) || position < 1 || position > denominator) return undefined;
+
+  return { denominator, position };
 };
 
 ---
@@ -74,26 +108,27 @@ const manualSpanClasses: Record<string, string> = {
 <div class="gallery-grid">
   {
     filteredResources.map((CloudinaryResource, index) => {
-      const customContext: CloudinaryCustomContext = CloudinaryResource.context?.custom ?? {};
+      // Cloudinary can return contextual metadata either directly on `context`
+      // or nested below `context.custom`, depending on the API/account mode.
+      const customContext = (CloudinaryResource.context?.custom ?? CloudinaryResource.context ?? {}) as CloudinaryCustomContext;
       const requestedSpan = customContext.gallery_span?.trim().toLowerCase() ?? "";
-      const hasManualSpan = Object.hasOwn(manualSpanClasses, requestedSpan);
-      const isPanorama = CloudinaryResource.width > CloudinaryResource.height * 3;
-      const baseClass = isPanorama ? "full panorama" : hasManualSpan ? manualSpanClasses[requestedSpan] : tilePattern[index % tilePattern.length];
+      const requestedSlot = customContext.gallery_slot?.trim().toLowerCase() ?? "";
+      const fractionalPlacement = getFractionalPlacement(requestedSpan, customContext.gallery_position?.trim(), requestedSlot);
+      const hasManualSpan = Object.hasOwn(manualSpanClasses, requestedSpan) || Boolean(fractionalPlacement);
+      const isPanorama = CloudinaryResource.width > CloudinaryResource.height * 2;
+      const baseClass = isPanorama
+        ? "full panorama"
+        : fractionalPlacement
+          ? "fractional-slot"
+          : hasManualSpan
+            ? manualSpanClasses[requestedSpan]
+            : "single";
       const requestedAlignment = customContext.gallery_align?.trim().toLowerCase() ?? "";
-      let staggerClass = "";
-
-      if (requestedAlignment === "bottom") {
-        staggerClass = "bottom";
-      } else if (requestedAlignment !== "top" && !hasManualSpan && !baseClass) {
-        // Stagger automatic small tiles to create a staircase effect (no overlap).
-        const pair = Math.floor(index / 2);
-        const positionInPair = index % 2; // 0 or 1
-        const invert = pair % 2 === 1;
-        const shouldBottom = invert ? positionInPair === 0 : positionInPair === 1;
-        staggerClass = shouldBottom ? "bottom" : "";
-      }
-
-      const spanClass = `${baseClass} ${staggerClass}`.trim();
+      const placementStyle = fractionalPlacement
+        ? `--gallery-column-start: ${(fractionalPlacement.position - 1) * (12 / fractionalPlacement.denominator) + 1}; --gallery-column-span: ${12 / fractionalPlacement.denominator};`
+        : "";
+      const alignmentClass = requestedAlignment === "bottom" ? "bottom" : "";
+      const spanClass = `${baseClass} ${alignmentClass}`.trim();
       const altText = CloudinaryResource.context?.alt || "";
       const metaTitle = customContext.title || customContext.name || CloudinaryResource.context?.caption || "";
       const metaTime = customContext.time || customContext.date || "";
@@ -105,13 +140,13 @@ const manualSpanClasses: Record<string, string> = {
           onclick="setFullscreen(this)"
           ontouchend="if (!isScrolling) setFullscreen(this)"
           class={`gallery-item relative cursor-pointer fullscreen:cursor-auto ${spanClass}`}
-          style={`aspect-ratio: ${CloudinaryResource.width} / ${CloudinaryResource.height};`}
+          style={`aspect-ratio: ${CloudinaryResource.width} / ${CloudinaryResource.height}; ${placementStyle}`}
           data-alt={altText}
           data-meta-title={metaTitle}
           data-meta-time={metaTime}
           data-meta-location={metaLocation}
           data-meta-body={metaBody}
-          data-gallery-layout={isPanorama ? "panorama" : requestedSpan || "auto"}
+          data-gallery-layout={isPanorama ? "panorama" : requestedSlot || requestedSpan || "auto"}
         >
           <div role="status" class="absolute top-1/2 left-1/2 z-[2] hidden -translate-x-1/2 -translate-y-1/2 fullscreen:fixed fullscreen:block">
             <span class="sr-only">loading image...</span>
@@ -485,7 +520,7 @@ const manualSpanClasses: Record<string, string> = {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 12px;
-    grid-auto-flow: dense;
+    grid-auto-flow: row;
   }
 
   .gallery-item {
@@ -510,22 +545,30 @@ const manualSpanClasses: Record<string, string> = {
     grid-column: 1 / -1;
   }
 
-  .pair-left,
-  .pair-right {
+  .fractional-slot {
     grid-column: 1 / -1;
   }
 
   @media (min-width: 980px) {
     .gallery-grid {
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(12, minmax(0, 1fr));
     }
 
-    .pair-left {
-      grid-column: 1 / span 2;
+    .gallery-item,
+    .single {
+      grid-column: span 3;
     }
 
-    .pair-right {
-      grid-column: 3 / span 2;
+    .wide {
+      grid-column: span 6;
+    }
+
+    .full {
+      grid-column: 1 / -1;
+    }
+
+    .fractional-slot {
+      grid-column: var(--gallery-column-start) / span var(--gallery-column-span);
     }
   }
 
